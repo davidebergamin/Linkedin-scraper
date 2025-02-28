@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LinkedIn Comment Scraper</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h2>LinkedIn Comment Scraper</h2>
+    <button id="scrapeButton">Scrape Comments</button>
+    <p id="status">Click the button to scrape comments.</p>
+    
+    <div class="options">
+      <label>
+        <input type="checkbox" id="debugMode"> Debug Mode
+        <span class="tooltip">Shows additional information about the scraping process</span>
+      </label>
+      
+      <div id="debugInfo" class="debug-info" style="display: none;">
+        <h3>Debug Information</h3>
+        <div id="debugContent"></div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>Make sure you're on a LinkedIn post with comments.</p>
+      <p><small>If scraping doesn't work, LinkedIn may have updated their page structure.</small></p>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html> 
