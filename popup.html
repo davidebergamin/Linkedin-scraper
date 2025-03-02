@@ -7,19 +7,23 @@
 <body>
   <div class="container">
     <h2>LinkedIn Comment Scraper</h2>
-    <button id="scrapeButton">Scrape Comments</button>
-    <p id="status">Click the button to scrape comments.</p>
+    <input type="text" id="keywordInput" placeholder="Filter by keyword (optional)" class="keyword-input">
+    <div class="button-row">
+      <button id="scrapeButton">Scrape Comments</button>
+      <button id="stopButton" class="stop-button" style="display: none;">Stop</button>
+    </div>
+    <div class="button-row" id="actionButtons" style="display: none;">
+      <button id="downloadButton" class="download-button">Download CSV</button>
+      <button id="sheetsButton" class="sheets-button">Open in Sheets</button>
+    </div>
     
-    <div class="options">
-      <label>
-        <input type="checkbox" id="debugMode"> Debug Mode
-        <span class="tooltip">Shows additional information about the scraping process</span>
-      </label>
-      
-      <div id="debugInfo" class="debug-info" style="display: none;">
-        <h3>Debug Information</h3>
-        <div id="debugContent"></div>
-      </div>
+    <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+    <p id="status">Click the button to scrape comments.</p>
+    <p id="resultSummary" class="result-summary" style="display: none;"></p>
+    
+    <div class="log-container">
+      <h3>Log</h3>
+      <div id="logContent" class="log-content"></div>
     </div>
     
     <div class="footer">

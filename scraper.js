@@ -1,6 +1,9 @@
 // This script runs on LinkedIn pages and helps with auto-scrolling to load all comments
 // It also provides utility functions to help with scraping
 
+// Global flag to control scrolling
+let shouldStopScrolling = false;
+
 // Function to scroll to the bottom of the page to load more comments
 function scrollToBottom() {
   window.scrollTo(0, document.body.scrollHeight);
@@ -177,12 +180,40 @@ function detectDOMStructure() {
     }
   });
   
+  // Find all profile links on the page
+  try {
+    const profileLinks = Array.from(document.querySelectorAll('a')).filter(link => {
+      const href = link.href || '';
+      return href.includes('linkedin.com/in/') || href.includes('/profile/');
+    });
+    
+    domInfo.profileLinks = {
+      count: profileLinks.length,
+      samples: profileLinks.slice(0, 5).map(link => link.href)
+    };
+  } catch (e) {
+    console.error("Error finding profile links:", e);
+  }
+  
   return domInfo;
 }
 
 // Listen for messages from the popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "scrollToLoadComments") {
+    // Reset the stop flag
+    shouldStopScrolling = false;
+    
+    // Get debug mode from message
+    const debugMode = message.debugMode || false;
+    const logs = debugMode ? ["Starting scrolling to load comments..."] : [];
+    
+    // Log helper function
+    const log = (message) => {
+      if (debugMode) logs.push(message);
+      console.log(message);
+    };
+    
     // Scroll to load more comments
     let scrollAttempts = 0;
     const maxScrollAttempts = 15; // Increased from 10 to 15
@@ -190,28 +221,104 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     let totalButtonsClicked = 0;
     let totalThreadsExpanded = 0;
     
+    log(`Initial page height: ${lastHeight}px`);
+    
     const scrollInterval = setInterval(() => {
+      // Check if we should stop scrolling
+      if (shouldStopScrolling) {
+        clearInterval(scrollInterval);
+        log("Scrolling stopped by user request");
+        sendResponse({ 
+          status: "stopped",
+          message: "Scrolling stopped by user",
+          stats: {
+            scrollAttempts,
+            totalButtonsClicked,
+            totalThreadsExpanded,
+            finalHeight: document.body.scrollHeight
+          },
+          logs: debugMode ? logs : undefined
+        });
+        return;
+      }
+      
       // Scroll to bottom
       scrollToBottom();
+      scrollAttempts++;
+      log(`Scroll attempt ${scrollAttempts}/${maxScrollAttempts}`);
       
       // Try to click "Show more comments" buttons
       const buttonsClicked = clickShowMoreButtons();
       totalButtonsClicked += buttonsClicked;
+      if (buttonsClicked > 0) {
+        log(`Clicked ${buttonsClicked} 'Show more comments' buttons (total: ${totalButtonsClicked})`);
+      }
       
       // Try to expand comment threads
       const threadsExpanded = expandCommentThreads();
       totalThreadsExpanded += threadsExpanded;
+      if (threadsExpanded > 0) {
+        log(`Expanded ${threadsExpanded} comment threads (total: ${totalThreadsExpanded})`);
+      }
       
       // Check if we've reached the bottom or max attempts
       setTimeout(() => {
+        // Check again if we should stop
+        if (shouldStopScrolling) {
+          clearInterval(scrollInterval);
+          log("Scrolling stopped by user request");
+          sendResponse({ 
+            status: "stopped",
+            message: "Scrolling stopped by user",
+            stats: {
+              scrollAttempts,
+              totalButtonsClicked,
+              totalThreadsExpanded,
+              finalHeight: document.body.scrollHeight
+            },
+            logs: debugMode ? logs : undefined
+          });
+          return;
+        }
+        
         const newHeight = document.body.scrollHeight;
-        scrollAttempts++;
+        log(`New page height: ${newHeight}px (change: ${newHeight - lastHeight}px)`);
         
         if ((newHeight === lastHeight && buttonsClicked === 0 && threadsExpanded === 0) || scrollAttempts >= maxScrollAttempts) {
           clearInterval(scrollInterval);
           
+          if (scrollAttempts >= maxScrollAttempts) {
+            log(`Reached maximum scroll attempts (${maxScrollAttempts})`);
+          } else {
+            log("No more new content to load");
+          }
+          
           // Collect DOM structure info for debugging
           const domInfo = detectDOMStructure();
+          log(`Page title: ${domInfo.pageTitle}`);
+          log(`Found ${domInfo.commentSelectors.length} different comment selectors`);
+          
+          if (debugMode) {
+            // Count all potential comment elements
+            const commentElements = document.querySelectorAll('*[class*="comment"]');
+            log(`Found ${commentElements.length} elements with "comment" in their class name`);
+            
+            // Count all potential buttons that might load more comments
+            const potentialLoadButtons = Array.from(document.querySelectorAll('button'))
+              .filter(btn => {
+                const text = btn.textContent.toLowerCase();
+                return text.includes('load') || text.includes('more') || text.includes('carica') || text.includes('show');
+              });
+            log(`Found ${potentialLoadButtons.length} potential "load more" buttons`);
+            
+            // Log profile links found
+            if (domInfo.profileLinks) {
+              log(`Found ${domInfo.profileLinks.count} profile links on the page`);
+              if (domInfo.profileLinks.samples && domInfo.profileLinks.samples.length > 0) {
+                log(`Sample profile links: ${domInfo.profileLinks.samples.join(', ')}`);
+              }
+            }
+          }
           
           sendResponse({ 
             status: "complete",
@@ -222,7 +329,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               totalThreadsExpanded,
               finalHeight: newHeight
             },
-            domInfo
+            domInfo,
+            logs: debugMode ? logs : undefined
           });
         }
         lastHeight = newHeight;
@@ -233,10 +341,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
   
+  // Add a handler for stopping the scrolling process
+  if (message.action === "stopScrolling") {
+    shouldStopScrolling = true;
+    console.log("Received stop scrolling request");
+    sendResponse({ status: "stopping" });
+    return false;
+  }
+  
   // Add a helper function to detect LinkedIn's DOM structure
   if (message.action === "detectDOMStructure") {
     const domInfo = detectDOMStructure();
     sendResponse({ domInfo });
+    return false;
+  }
+  
+  // Handle the showImportInstructions message for Google Sheets
+  if (message.action === "showImportInstructions") {
+    // This is handled by the triggerFileImport function in popup.js
+    // which is injected directly into the Google Sheets page
     return false;
   }
 }); 

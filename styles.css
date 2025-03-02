@@ -21,16 +21,104 @@ button {
   border-radius: 5px;
   cursor: pointer;
   font-size: 14px;
+  margin: 5px 0;
 }
 
 button:hover {
   background-color: #005f8f;
 }
 
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 5px 0;
+}
+
+.download-button {
+  background-color: #0a8f0a; /* Green */
+}
+
+.download-button:hover {
+  background-color: #076b07;
+}
+
+.sheets-button {
+  background-color: #1a73e8; /* Google blue */
+}
+
+.sheets-button:hover {
+  background-color: #1558b3;
+}
+
+.stop-button {
+  background-color: #e53935; /* Red */
+}
+
+.stop-button:hover {
+  background-color: #c62828;
+}
+
+.keyword-input {
+  width: 90%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0073b1;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin: 10px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 #status {
   margin-top: 10px;
   font-size: 12px;
   color: #666;
+}
+
+.result-summary {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #333;
+  font-weight: bold;
+}
+
+.log-container {
+  margin-top: 15px;
+  text-align: left;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+}
+
+.log-container h3 {
+  font-size: 14px;
+  margin: 0 0 5px 0;
+  color: #0073b1;
+}
+
+.log-content {
+  font-size: 12px;
+  background-color: #f5f5f5;
+  padding: 8px;
+  border-radius: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  line-height: 1.4;
+  color: #333;
 }
 
 .options {
@@ -76,13 +164,28 @@ button:hover {
   padding: 8px;
   border-radius: 4px;
   text-align: left;
-  max-height: 150px;
+  max-height: 200px;
   overflow-y: auto;
+  border: 1px solid #ddd;
 }
 
 .debug-info h3 {
   font-size: 12px;
   margin: 0 0 5px 0;
+  color: #0073b1;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+
+.debug-controls {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+
+.debug-controls label {
+  margin-left: auto;
 }
 
 #debugContent {
@@ -90,6 +193,11 @@ button:hover {
   font-family: monospace;
   white-space: pre-wrap;
   color: #333;
+  line-height: 1.4;
+  margin: 0;
+  padding: 5px;
+  background-color: #fff;
+  border-radius: 3px;
 }
 
 .footer {
